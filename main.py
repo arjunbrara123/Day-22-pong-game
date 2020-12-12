@@ -1,8 +1,8 @@
-from turtle import Turtle, Screen   # Library for displaying GUI window
-from scoreboard import Scoreboard   # Class object to display user scores
-from paddle import Paddle           # Class object to create user paddles
-from ball import Ball               # Class object for game ball that moves and bounces
-import time                         # Library for pausing game between ball bounces to create animation effect
+from turtle import Turtle, Screen       # Library for displaying GUI window
+from scoreboard import Scoreboard       # Custom Class object to display user scores
+from paddle import Paddle               # Custom Class object to create user paddles
+from ball import Ball                   # Custom Class object for game ball that moves and bounces
+import time                             # Library for pausing between ball movements to create animation effect
 
 # Initialise the screen and environment
 p1_score = 0                            # Initialise Player 1 score
@@ -15,6 +15,8 @@ screen.tracer(0)                        # Turn off automatic screen updates
 scoreboard = Scoreboard()               # Initialise scoreboard object to show player scores
 time_delay = 0.08                       # Set initial ball speed
 winning_score = 3                       # Set points required to win game
+FONT_SPLASH = ("Courier", 80, "bold")   # Font for displaying 'PONG' splash screen
+FONT_MSG = ("Courier", 40, "bold")      # Font for displaying messages in centre screen
 
 # Create middle vertical line
 donatello = Turtle()                # Initialise new turtle object
@@ -43,25 +45,27 @@ screen.onkey(p2.paddle_down, "Down")    # Player 2 Paddle Down Key
 
 
 # Welcome 'Splash Screen' message
-def splash_screen(scorer = 0):
+def splash_screen(point=0):
     """Display Splash Screen 'PONG' message at start of each round"""
     splash = Turtle()               # Initialise Turtle object
     splash.hideturtle()             # Stop displaying turtle object on screen
     splash.penup()                  # Ensure turtle isn't drawing on screen yet
-    if scorer > 0:                  # Check if a player recently scored
-        splash.goto(0, 0)           # Goto centre of screen
-        splash.color("gold")        # Set message text colour to gold
-        splash.write(f"Player {scorer} scores!", align="center", font=("Courier", 40, "bold"))  # Set display font
-        time.sleep(1)               # Keep on screen for 1 second
-        screen.update()             # Update user
-        splash.clear()              # Clear message
-    splash.color("white")           # Set message text colour to white
-    splash.setposition(0, -250)     # Set position of splash screen welcome message
     splash.speed(0)                 # Turn off any updating delays
-    splash.write("PONG", align="center", font=("Courier", 80, "bold"))  # Set display font
-    screen.update()                 # Update screen for user to see splash message
-    time.sleep(1)                   # Keep on screen for 1 second
-    splash.clear()                  # Clear splash screen message
+
+    if point > 0:                                                               # Check if a player recently scored
+        splash.goto(0, 0)                                                       # Goto centre of screen
+        splash.color("gold")                                                    # Set text colour to gold
+        splash.write(f"Player {point} scores!", align="center", font=FONT_MSG)  # Show scoring player
+        time.sleep(1)                                                           # Keep on screen for 1 second
+        screen.update()                                                         # Update user
+        splash.clear()                                                          # Clear message
+
+    splash.color("white")                                   # Set message text colour to white
+    splash.setposition(0, -250)                             # Set position of splash screen welcome message
+    splash.write("PONG", align="center", font=FONT_SPLASH)  # Set display font
+    screen.update()                                         # Update screen for user to see splash message
+    time.sleep(1)                                           # Keep on screen for 1 second
+    splash.clear()                                          # Clear splash screen message
 
 
 # Initialise game loop
@@ -72,7 +76,7 @@ while game_on:                      # Start continuous game loop until someone w
     # Continuously move ball
     ball.move()                     # Move ball forward in set movement direction based on game rules
 
-    # Check for collision with a paddle
+    # Check for collision with a Player 1 Paddle
     if ball.xcor() <= -320 and p1.distance(ball) < 50:
         ball.bounce()               # Bounce ball back towards Player 2
         time_delay *= 0.9           # Increase speed by 10%
@@ -82,6 +86,7 @@ while game_on:                      # Start continuous game loop until someone w
         time.sleep(time_delay)      # Pause to let the user see
         p1.color("white")           # Reset paddle colour back to white
 
+    # Check for collision with a Player 2 Paddle
     if ball.xcor() >= 320 and p2.distance(ball) < 50:
         ball.bounce()               # Bounce ball back towards Player 1
         time_delay *= 0.9           # Increase speed by 10%
@@ -92,32 +97,33 @@ while game_on:                      # Start continuous game loop until someone w
         p2.color("white")           # Reset paddle colour back to white
 
     # Check if Player 2 has scored a point!
-    if ball.xcor() <= -380:             # Check if ball crossed left of screen
-        ball.setpos(0, 0)               # Reset ball position back to start
-        p2_score += 1                   # Increase Player 2 score by 1
-        scoreboard.refresh(p1_score, p2_score)  # Show updated score on screen
-        time_delay = 0.08               # Reset ball speed
-        if p2_score >= winning_score:   # Check if score increase is enough to win game
-            scoreboard.winner(2)        # Show winner on scoreboard
-            p1.color("red")             # Set Player 1 Paddle to Red to indicate loss
-            p2.color("green")           # Set Player 2 Paddle to Green to indicate win
-            game_on = False             # Stop game loop
+    if ball.xcor() <= -380:                         # Check if ball crossed left of screen
+        ball.setpos(0, 0)                           # Reset ball position back to start
+        p2_score += 1                               # Increase Player 2 score by 1
+        scoreboard.refresh(p1_score, p2_score, 2)   # Show updated score on screen
+        time_delay = 0.08                           # Reset ball speed
+        if p2_score >= winning_score:               # Check if score increase is enough to win game
+            scoreboard.winner(2)                    # Show winner on scoreboard
+            p1.color("red")                         # Set Player 1 Paddle to Red to indicate loss
+            p2.color("green")                       # Set Player 2 Paddle to Green to indicate win
+            game_on = False                         # Stop game loop
         else:
-            splash_screen(2)            # Splash screen to restart round
-
+            splash_screen(2)                        # Splash screen to restart round
+            scoreboard.refresh(p1_score, p2_score)  # Reset scoreboard to white text
     # Check if Player 1 has scored a point!
-    if ball.xcor() >= 380:              # Check if ball crossed left of screen
-        ball.setpos(0, 0)               # Reset ball position back to start
-        p1_score += 1                   # Increase Player 1 score by 1
-        scoreboard.refresh(p1_score, p2_score)  # Show updated score on screen
-        time_delay = 0.08               # Reset ball speed
-        if p1_score >= winning_score:   # Check if score increase is enough to win game
-            scoreboard.winner(1)        # Show winner on scoreboard
-            p1.color("green")           # Set Player 1 Paddle to Green to indicate win
-            p2.color("red")             # Set Player 2 Paddle to Red to indicate loss
-            game_on = False             # Stop game loop
+    if ball.xcor() >= 380:                          # Check if ball crossed left of screen
+        ball.setpos(0, 0)                           # Reset ball position back to start
+        p1_score += 1                               # Increase Player 1 score by 1
+        scoreboard.refresh(p1_score, p2_score, 1)   # Show updated score on screen
+        time_delay = 0.08                           # Reset ball speed
+        if p1_score >= winning_score:               # Check if score increase is enough to win game
+            scoreboard.winner(1)                    # Show winner on scoreboard
+            p1.color("green")                       # Set Player 1 Paddle to Green to indicate win
+            p2.color("red")                         # Set Player 2 Paddle to Red to indicate loss
+            game_on = False                         # Stop game loop
         else:
-            splash_screen(1)            # Splash screen to restart round
+            splash_screen(1)                        # Splash screen to restart round
+            scoreboard.refresh(p1_score, p2_score)  # Reset scoreboard to white text
 
     # Update screen
     time.sleep(time_delay)              # Pause game to facilitate visual animation
